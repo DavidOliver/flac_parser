@@ -5,7 +5,8 @@ Parses a FLAC file metadata.
 ### Examples
 
   ```elixir
-  iex> {:ok, metadata} = FlacParser.parse "test/data/test.flac"
+  iex> {:ok, data} = File.read "test/data/test.flac"
+  iex> {:ok, metadata} = FlacParser.parse data
   iex> Map.keys metadata
   [:album, :albumartist, :artist, :comment, :composer, :date,
  :discnumber, :disctotal, :encoder, :genre, :performer,

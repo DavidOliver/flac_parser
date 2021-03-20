@@ -14,11 +14,9 @@ defmodule FlacParser do
     iex> metadata.artist
     "Artist Test"
   """
-  def parse(filename) do
-    case File.read(filename) do
-      {:ok, binary} ->
-        << signature :: binary-size(4), data :: binary >> = binary
-  
+  def parse(data) do
+    case data do
+      << signature :: binary-size(4), data :: bitstring >> ->
         case signature do
           "fLaC" -> { :ok, parse_block(%{pictures: %{}}, data, 0) |> build_metadata_from_parsed_data |> Map.drop(@skip_types) }
           _ -> {:error, "Not a FLAC file."}
@@ -28,15 +26,15 @@ defmodule FlacParser do
   end
 
   # parses, identifies and calls the proper function
-  defp parse_block(parsed_metadata, binary, 0) when is_map(parsed_metadata) do
+  defp parse_block(parsed_metadata, data, 0) when is_map(parsed_metadata) do
     <<
       last_metadata_block_flag :: size(1),
-      block_type_int :: integer-size(7),
-      metadata_length :: integer-size(24),
-      binary_metadata :: binary-size(metadata_length),
-      remaining_data :: binary
-    >> = binary
-    
+      block_type_int           :: integer-size(7),
+      metadata_length          :: integer-size(24),
+      binary_metadata          :: binary-size(metadata_length),
+      remaining_data           :: bitstring
+    >> = data
+
     block_type = case block_type_int do
       0 -> :streaminfo
       1 -> :padding
@@ -99,7 +97,7 @@ defmodule FlacParser do
       vendor_string: vendor_string
     }
   end
-  
+
   # parse picture block
   defp parse_block(:picture, metadata) do
     <<
@@ -141,7 +139,7 @@ defmodule FlacParser do
       color: colors,
       length: picture_length,
       filename: "#{picture_type}.#{extension}",
-      data: picture_data  
+      data: picture_data
     }
   end
 
